@@ -57,11 +57,16 @@ const buildDuracionMediodeTransporte = async (start, end) => {
         ]
     };
 
-    if (start !== 'All') {
+    if (start !== 'All' || end !== 'All') {
         postParams.pipeline.unshift({
             $match: {}
         })
-        postParams.pipeline[0].$match["distrito_origen"] = start;
+        if (start !== 'All') {
+            postParams.pipeline[0].$match["distrito_origen"] = start;
+        }
+        if (end !== 'All') {
+            postParams.pipeline[0].$match["distrito_destino"] = end;
+        }
     }
 
     res = await fetch(mongoEndpoint, {
@@ -187,11 +192,16 @@ const buildHistogramaDuracion = (start, end) => {
         ]
     }
 
-    if (start !== 'All') {
+    if (start !== 'All' || end !== 'All') {
         postParams.pipeline.unshift({
             $match: {}
         })
-        postParams.pipeline[0].$match["distrito_origen"] = start;
+        if (start !== 'All') {
+            postParams.pipeline[0].$match["distrito_origen"] = start;
+        }
+        if (end !== 'All') {
+            postParams.pipeline[0].$match["distrito_destino"] = end;
+        }
     }
 
     fetch(mongoEndpoint, {
@@ -345,11 +355,16 @@ const buildMedioNumViajes = (start, end) => {
             }
         ]
     };
-    if (start !== 'All') {
+    if (start !== 'All' || end !== 'All') {
         postParams.pipeline.unshift({
             $match: {}
         })
-        postParams.pipeline[0].$match["distrito_origen"] = start;
+        if (start !== 'All') {
+            postParams.pipeline[0].$match["distrito_origen"] = start;
+        }
+        if (end !== 'All') {
+            postParams.pipeline[0].$match["distrito_destino"] = end;
+        }
     }
 
     fetch(mongoEndpoint, {
@@ -485,11 +500,16 @@ const buildViajesHorario = (start, end) => {
             }
         ]
     }
-    if (start !== 'All') {
+    if (start !== 'All' || end !== 'All') {
         postParams.pipeline.unshift({
             $match: {}
         })
-        postParams.pipeline[0].$match["distrito_origen"] = start;
+        if (start !== 'All') {
+            postParams.pipeline[0].$match["distrito_origen"] = start;
+        }
+        if (end !== 'All') {
+            postParams.pipeline[0].$match["distrito_destino"] = end;
+        }
     }
 
     fetch(mongoEndpoint, {
@@ -635,11 +655,16 @@ const buildPropositoNumPasajeros = (start, end) => {
             }
         ]
     };
-    if (start !== 'All') {
+    if (start !== 'All' || end !== 'All') {
         postParams.pipeline.unshift({
             $match: {}
         })
-        postParams.pipeline[0].$match["distrito_origen"] = start;
+        if (start !== 'All') {
+            postParams.pipeline[0].$match["distrito_origen"] = start;
+        }
+        if (end !== 'All') {
+            postParams.pipeline[0].$match["distrito_destino"] = end;
+        }
     }
 
     fetch(mongoEndpoint, {
@@ -785,14 +810,14 @@ $('#btnSearch').click((e) => {
 
 
     let startValue = $('#select_start_trip').val()
-    // let endValue = $('#select_end_trip').val()
+    let endValue = $('#select_end_trip').val()
     // let transportValue = $('#select_transport').val()
     // createMap(startValue, endValue, transportValue);
-    buildDuracionMediodeTransporte(startValue, 'All');
-    buildHistogramaDuracion(startValue, 'All');
-    buildMedioNumViajes(startValue, 'All');
-    buildViajesHorario(startValue, 'All');
-    buildPropositoNumPasajeros(startValue, 'All');
+    buildDuracionMediodeTransporte(startValue, endValue);
+    buildHistogramaDuracion(startValue, endValue);
+    buildMedioNumViajes(startValue, endValue);
+    buildViajesHorario(startValue, endValue);
+    buildPropositoNumPasajeros(startValue, endValue);
 
 })
 
@@ -833,38 +858,38 @@ loadSelectBox = async () => {
     });
 
     // populate end_trip selectbox
-    // postParams = {
-    //     "pipeline": [
-    //         {
-    //             "$group": {
-    //                 "_id": "$distrito_destino",
-    //                 "count": {
-    //                     "$sum": "$num_coincidencias"
-    //                 }
-    //             }
-    //         },
-    //         {
-    //             "$sort": {
-    //                 "_id": 1
-    //             }
-    //         }
-    //     ]
-    // }
+    postParams = {
+        "pipeline": [
+            {
+                "$group": {
+                    "_id": "$distrito_destino",
+                    "count": {
+                        "$sum": "$num_coincidencias"
+                    }
+                }
+            },
+            {
+                "$sort": {
+                    "_id": 1
+                }
+            }
+        ]
+    }
 
-    // _res = await fetch(dataframe2Endpoint, {
-    //     method: 'post',
-    //     headers: {
-    //         "Content-type": "application/json"
-    //     },
-    //     body: JSON.stringify(postParams)
-    // })
-    // response = await _res.json();
+    _res = await fetch(dataframe2Endpoint, {
+        method: 'post',
+        headers: {
+            "Content-type": "application/json"
+        },
+        body: JSON.stringify(postParams)
+    })
+    response = await _res.json();
 
-    // const $selectEndTrip = $('#select_end_trip');
-    // $selectEndTrip.append($("<option />").val('All').text('Selecciona destino (Todos)'));
-    // response.map((item) => {
-    //     $selectEndTrip.append($("<option />").val(item._id).text(item._id));
-    // });
+    const $selectEndTrip = $('#select_end_trip');
+    $selectEndTrip.append($("<option />").val('All').text('Selecciona destino (Todos)'));
+    response.map((item) => {
+        $selectEndTrip.append($("<option />").val(item._id).text(item._id));
+    });
 
 }
 
