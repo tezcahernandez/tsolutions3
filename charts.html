@@ -72,7 +72,61 @@
             <div id="content">
 
                 <!-- Topbar -->
-                
+                <nav class="navbar navbar-expand navbar-light bg-white topbar static-top shadow">
+
+                    <!-- Sidebar Toggle (Topbar) -->
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+                    <!-- <form
+                            class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                            <div class="input-group">
+                                <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
+                                    aria-label="Search" aria-describedby="basic-addon2">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="button">
+                                        <i class="fas fa-search fa-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </form> -->
+
+                    <form
+                        class="d-none d-sm-inline-block form-inline ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                        <div class="input-group">
+                            <select id="select_start_trip" class="custom-select">
+                                <!-- <option selected>Origen</option> -->
+                            </select>
+                            <!-- <select id="select_end_trip" class="custom-select">
+                             
+                            </select> -->
+                        </div>
+
+                    </form>
+
+                    <!-- <form
+                        class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+                        <div class="input-group">
+                            <select id="select_transport" class="custom-select">
+                                <option selected>All</option>
+                                <option value="auto">Auto</option>
+                                <option value="transporte">Transporte público</option>
+                            </select>
+
+                        </div>
+                    </form> -->
+                    <form
+                        class="d-none d-sm-inline-block form-inline ml-md-3 my-2 my-md-0 mw-100 navbar-search" style="margin-right: 5px;">
+                        <a href="#" id="btnSearch" class="btn btn-primary btn-circle btn-md">
+                            <i class="fa fa-search"></i>
+                        </a>
+                    </form>
+
+                    <!-- Topbar Navbar -->
+
+
+                </nav>
                 <!-- End of Topbar -->
 
                 <!-- Begin Page Content -->
@@ -97,7 +151,9 @@
                                     <!-- <div class="col-md-2"><canvas id="chartjs-gauge" width="80" height="100"></canvas></div> -->
                                 </div>
 
-                                <div class="row"><canvas id="bubbleChart" width="400" height="200"></canvas></div>
+                                <div class="row" id="bubbleChartContainer">
+                                    <canvas id="bubbleChart" width="400" height="200"></canvas>
+                                </div>
                             </div>
 
 
@@ -130,7 +186,7 @@
       <div id="plot6"></div>
       <div id="plot7"></div> -->
 
-                    <script src="./plots.js"></script>
+
 
                 </div>
                 <!-- /.container-fluid -->
@@ -196,8 +252,9 @@
 
     <!-- tsolutions -->
     <script src="./js/districts_coordinates.js"></script>
-    <script src="./js/config.js"></script>
-    <script src="./js/logic.js"></script>
+    <script src="./plots.js"></script>
+    <!-- <script src="./js/config.js"></script> -->
+    <!-- <script src="./js/logic.js"></script> -->
 </body>
 
 </html>

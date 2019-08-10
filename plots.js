@@ -1,5 +1,5 @@
 mongoEndpoint = "https://webhooks.mongodb-stitch.com/api/client/v2.0/app/devapp-cmeay/service/bootcamp/incoming_webhook/dataframe3";
-
+const dataframe2Endpoint = "https://webhooks.mongodb-stitch.com/api/client/v2.0/app/devapp-cmeay/service/bootcamp/incoming_webhook/custom";
 // 
 function getColor11(v) {
     return v > 10 ? '#95e386' :
@@ -38,178 +38,165 @@ function getColor20(v) {
                                                                                 "#aaf59a";
 }
 
-
-const buildDuracionMediodeTransporte = () => {
-    pipeline = [
-        {
-            '$group': {
-                '_id': '$medio_principal',
-                'duracion_promedio': { '$avg': '$duracion_viaje (min)' },
-                'total_viajes': { '$sum': 1 }
+var myChart = undefined;
+const buildDuracionMediodeTransporte = async (start, end) => {
+    postParams = {
+        pipeline: [
+            {
+                '$group': {
+                    '_id': '$medio_principal',
+                    'duracion_promedio': { '$avg': '$duracion_viaje (min)' },
+                    'total_viajes': { '$sum': 1 }
+                }
+            },
+            {
+                '$sort': {
+                    'duracion_promedio': -1
+                }
             }
-        },
-        {
-            '$sort': {
-                'duracion_promedio': -1
-            }
-        }
-    ];
+        ]
+    };
 
-    fetch(mongoEndpoint, {
+    if (start !== 'All') {
+        postParams.pipeline.unshift({
+            $match: {}
+        })
+        postParams.pipeline[0].$match["distrito_origen"] = start;
+    }
+
+    res = await fetch(mongoEndpoint, {
         method: 'POST',
-        body: JSON.stringify({ pipeline: pipeline }),
+        body: JSON.stringify(postParams),
         headers: {
             'Content-Type': 'application/json'
         }
-    }).then(async (res) => {
-        response = await res.json()
+    })
 
-        let ids = [];
-        response.map((item) => { ids.push(item._id) })
-        // let y = [];
-        // response.map((item) => { y.push(item.duracion_promedio.$numberDouble) })
-        // let r = [];
-        // response.map((item) => { r.push(item.total_viajes.$numberInt / 2000) })
+    response = await res.json()
 
-        let data = {
-            labels: "labels_",
-            datasets: []
-        };
-        response.map((item, i) => {
-            data.datasets.push({
-                label: [
-                    item._id
-                ],
-                backgroundColor: getColor20(i),
-                borderColor: "darkblue",
-                data: [
-                    {
-                        x: i,
-                        y: parseFloat(item.duracion_promedio.$numberDouble),
-                        // r: item.total_viajes.$numberInt /2000
-                        r: (45 * (item.total_viajes.$numberInt - 126) / 161200) + 1
-                    }
-                ]
-            })
-        })
-        let options = {
-            responsive: true,
-            title: {
-                display: true,
-                text: 'Duración de viajes por medio de transporte'
-            },
-            layout: {
-                padding: {
-                    left: 20,
-                    right: 20,
-                    top: 20,
-                    bottom: 20
+    let ids = [];
+    response.map((item) => { ids.push(item._id) })
+    // let y = [];
+    // response.map((item) => { y.push(item.duracion_promedio.$numberDouble) })
+    // let r = [];
+    // response.map((item) => { r.push(item.total_viajes.$numberInt / 2000) })
+
+    let data = {
+        labels: "labels_",
+        datasets: []
+    };
+    response.map((item, i) => {
+        data.datasets.push({
+            label: [
+                item._id
+            ],
+            backgroundColor: getColor20(i),
+            borderColor: "darkblue",
+            data: [
+                {
+                    x: i,
+                    y: parseFloat(item.duracion_promedio.$numberDouble),
+                    // r: item.total_viajes.$numberInt /2000
+                    r: (45 * (item.total_viajes.$numberInt - 126) / 161200) + 1
                 }
-            },
-            legend: {
-                display: true,
-                position: 'right'
-            },
-            scales: {
-                gridLines: { display: true },
-                yAxes: [{
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Duración (min)'
+            ]
+        })
+    })
+    let options = {
+        responsive: true,
+        title: {
+            display: true,
+            text: 'Duración de viajes por medio de transporte'
+        },
+        layout: {
+            padding: {
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 20
+            }
+        },
+        legend: {
+            display: true,
+            position: 'right'
+        },
+        scales: {
+            gridLines: { display: true },
+            yAxes: [{
+                scaleLabel: {
+                    display: true,
+                    labelString: 'Duración (min)'
+                }
+            }],
+            xAxes: [{
+                ticks: {
+                    stepSize: 1,
+                    display: true,
+                    major: { enabled: true },
+                    minor: { enabled: true },
+                    maxRotation: 90,
+                    minRotation: 90,
+                    callback: function (value, index, values) {
+                        return ids[parseInt(value)];
                     }
-                }],
-                xAxes: [{
-                    ticks: {
-                        stepSize: 1,
-                        display: true,
-                        major: { enabled: true },
-                        minor: { enabled: true },
-                        maxRotation: 90,
-                        minRotation: 90,
-                        callback: function (value, index, values) {
-                            return ids[parseInt(value)];
+                }
+            }]
+        }
+    }
+
+    // ctxContainer = $("#bubbleChartContainer")
+    // ctxContainer.empty();
+    // ctxElement = $("<canvas id='bubbleChart' width='400' height='200'></canvas>");
+    // ctxContainer.append(ctxElement);
+    ctx = $("#bubbleChart")
+    var myChart = new Chart(ctx, {
+        type: 'bubble',
+        data: data,
+        options: options,
+
+    });
+}
+buildDuracionMediodeTransporte('All', 'All');
+
+
+const buildHistogramaDuracion = (start, end) => {
+    postParams = {
+        pipeline: [
+            {
+                '$project': {
+                    'duracion_viaje (hour)': {
+                        '$trunc': {
+                            '$divide': [
+                                '$duracion_viaje (min)', 60
+                            ]
                         }
                     }
-                }]
-            }
-        }
-
-        var ctx = document.getElementById('bubbleChart').getContext('2d');
-        var myChart = new Chart(ctx, {
-            type: 'bubble',
-            data: data,
-            options: options,
-
-        });
-        // --------------
-
-        // var trace1 = {
-        //     x: x,
-        //     y: y,
-        //     mode: "markers",
-        //     type: "scatter",
-        //     marker: {
-        //         size: z,
-        //         // color: [10, 20, 40, 50],
-        //         // cmin: 0,
-        //         // cmax: 163000,
-        //         // colorscale: 'Greens',
-        //         // colorbar: {
-        //         //     title: 'Some rate',
-        //         //     ticksuffix: '%',
-        //         //     showticksuffix: 'last'
-        //         // },
-        //         line: {
-        //             color: 'black'
-        //         }
-        //     },
-        //     name: 'europe data'
-        // };
-
-        // // var layout = {
-        // //     'geo': {
-        // //         'scope': 'europe',
-        // //         'resolution': 50
-        // //     }
-        // // };
-        // data = [trace1]
-        // Plotly.newPlot('plot1', data);
-
-    })
-        .catch(error => console.error('Error:', error))
-}
-buildDuracionMediodeTransporte();
-
-
-const buildHistogramaDuracion = () => {
-    pipeline = [
-        {
-            '$project': {
-                'duracion_viaje (hour)': {
-                    '$trunc': {
-                        '$divide': [
-                            '$duracion_viaje (min)', 60
-                        ]
+                }
+            }, {
+                '$group': {
+                    '_id': '$duracion_viaje (hour)',
+                    'count': {
+                        '$sum': 1
                     }
                 }
-            }
-        }, {
-            '$group': {
-                '_id': '$duracion_viaje (hour)',
-                'count': {
-                    '$sum': 1
+            }, {
+                '$sort': {
+                    '_id': 1
                 }
             }
-        }, {
-            '$sort': {
-                '_id': 1
-            }
-        }
-    ]
+        ]
+    }
+
+    if (start !== 'All') {
+        postParams.pipeline.unshift({
+            $match: {}
+        })
+        postParams.pipeline[0].$match["distrito_origen"] = start;
+    }
 
     fetch(mongoEndpoint, {
         method: 'POST',
-        body: JSON.stringify({ pipeline: pipeline }),
+        body: JSON.stringify(postParams),
         headers: {
             'Content-Type': 'application/json'
         }
@@ -339,27 +326,35 @@ const buildHistogramaDuracion = () => {
     })
         .catch(error => console.error('Error:', error))
 }
-buildHistogramaDuracion();
+buildHistogramaDuracion('All', 'All');
 
 
-const buildMedioNumViajes = () => {
-    pipeline = [
-        {
-            '$group': {
-                '_id': '$medio_principal',
-                'total_viajes': { '$sum': 1 }
+const buildMedioNumViajes = (start, end) => {
+    postParams = {
+        pipeline: [
+            {
+                '$group': {
+                    '_id': '$medio_principal',
+                    'total_viajes': { '$sum': 1 }
+                }
+            },
+            {
+                '$sort': {
+                    'total_viajes': -1
+                }
             }
-        },
-        {
-            '$sort': {
-                'total_viajes': -1
-            }
-        }
-    ];
+        ]
+    };
+    if (start !== 'All') {
+        postParams.pipeline.unshift({
+            $match: {}
+        })
+        postParams.pipeline[0].$match["distrito_origen"] = start;
+    }
 
     fetch(mongoEndpoint, {
         method: 'POST',
-        body: JSON.stringify({ pipeline: pipeline }),
+        body: JSON.stringify(postParams),
         headers: {
             'Content-Type': 'application/json'
         }
@@ -466,32 +461,40 @@ const buildMedioNumViajes = () => {
     })
         .catch(error => console.error('Error:', error))
 }
-buildMedioNumViajes();
+buildMedioNumViajes('All', 'All');
 
 
-const buildViajesHorario = () => {
-    pipeline = [
-        {
-            '$group': {
-                '_id': {
-                    'proposito': '$proposito',
-                    'hora_inicio': '$hora_inicio'
-                },
-                'count': {
-                    '$sum': 1
+const buildViajesHorario = (start, end) => {
+    postParams = {
+        pipeline: [
+            {
+                '$group': {
+                    '_id': {
+                        'proposito': '$proposito',
+                        'hora_inicio': '$hora_inicio'
+                    },
+                    'count': {
+                        '$sum': 1
+                    }
+                }
+            },
+            {
+                '$sort': {
+                    '_id.hora_inicio': 1
                 }
             }
-        },
-        {
-            '$sort': {
-                '_id.hora_inicio': 1
-            }
-        }
-    ]
+        ]
+    }
+    if (start !== 'All') {
+        postParams.pipeline.unshift({
+            $match: {}
+        })
+        postParams.pipeline[0].$match["distrito_origen"] = start;
+    }
 
     fetch(mongoEndpoint, {
         method: 'POST',
-        body: JSON.stringify({ pipeline: pipeline }),
+        body: JSON.stringify(postParams),
         headers: {
             'Content-Type': 'application/json'
         }
@@ -612,28 +615,36 @@ const buildViajesHorario = () => {
     })
         .catch(error => console.error('Error:', error))
 }
-buildViajesHorario();
+buildViajesHorario('All', 'All');
 
 
 
-const buildPropositoNumPasajeros = () => {
-    pipeline = [
-        {
-            '$match': {
-                'medio_principal': 'Automóvil'
+const buildPropositoNumPasajeros = (start, end) => {
+    postParams = {
+        pipeline: [
+            {
+                '$match': {
+                    'medio_principal': 'Automóvil'
+                }
+            },
+            {
+                '$group': {
+                    '_id': '$proposito',
+                    'avg_personas_inicio_viaje': { '$avg': '$personas_inicio_viaje' }
+                }
             }
-        },
-        {
-            '$group': {
-                '_id': '$proposito',
-                'avg_personas_inicio_viaje': { '$avg': '$personas_inicio_viaje' }
-            }
-        }
-    ];
+        ]
+    };
+    if (start !== 'All') {
+        postParams.pipeline.unshift({
+            $match: {}
+        })
+        postParams.pipeline[0].$match["distrito_origen"] = start;
+    }
 
     fetch(mongoEndpoint, {
         method: 'POST',
-        body: JSON.stringify({ pipeline: pipeline }),
+        body: JSON.stringify(postParams),
         headers: {
             'Content-Type': 'application/json'
         }
@@ -766,98 +777,95 @@ const buildPropositoNumPasajeros = () => {
     })
         .catch(error => console.error('Error:', error))
 }
-buildPropositoNumPasajeros();
+buildPropositoNumPasajeros('All', 'All');
 
 
+$('#btnSearch').click((e) => {
+    // document.getElementById('mapContainer').innerHTML = '<div class="row" id="mainMap"></div>';
 
 
+    let startValue = $('#select_start_trip').val()
+    // let endValue = $('#select_end_trip').val()
+    // let transportValue = $('#select_transport').val()
+    // createMap(startValue, endValue, transportValue);
+    buildDuracionMediodeTransporte(startValue, 'All');
+    buildHistogramaDuracion(startValue, 'All');
+    buildMedioNumViajes(startValue, 'All');
+    buildViajesHorario(startValue, 'All');
+    buildPropositoNumPasajeros(startValue, 'All');
 
+})
 
-// const buildParadasRecogerAlguien = () => {
-//     pipeline = [
-//         {
-//             '$match': {
-//                 'medio_principal': 'Automóvil'
-//             }
-//         },
-//         {
-//             '$group': {
-//                 '_id': '$num_paradas_10_min',
-//                 'num_paradas_10_min': { '$sum': 1 }
-//             }
-//         },
-//         {
-//             '$sort': {
-//                 'num_paradas_10_min': -1
-//             }
-//         }
-//     ];
+loadSelectBox = async () => {
 
-//     fetch(mongoEndpoint, {
-//         method: 'POST',
-//         body: JSON.stringify({ pipeline: pipeline }),
-//         headers: {
-//             'Content-Type': 'application/json'
-//         }
-//     }).then(async (res) => {
-//         response = await res.json()
+    // populate start_trip selectbox
+    postParams = {
+        "pipeline": [
+            {
+                "$group": {
+                    "_id": "$distrito_origen",
+                    "count": {
+                        "$sum": "$num_coincidencias"
+                    }
+                }
+            },
+            {
+                "$sort": {
+                    "_id": 1
+                }
+            }
+        ]
+    }
 
+    _res = await fetch(dataframe2Endpoint, {
+        method: 'post',
+        headers: {
+            "Content-type": "application/json"
+        },
+        body: JSON.stringify(postParams)
+    })
+    response = await _res.json();
 
-//         pipeline2 = [
-//             {
-//                 '$match': {
-//                     'medio_principal': 'Automóvil'
-//                 }
-//             },
-//             {
-//                 '$group': {
-//                     '_id': '$paradas_recoger_alguien',
-//                     'paradas_recoger_alguien': { '$sum': 1 }
-//                 }
-//             }
-//         ];
+    const $selectStartTrip = $('#select_start_trip');
+    $selectStartTrip.append($("<option />").val('All').text('Selecciona origen (Todos)'));
+    response.map((item) => {
+        $selectStartTrip.append($("<option />").val(item._id).text(item._id));
+    });
 
-//         fetch(mongoEndpoint, {
-//             method: 'POST',
-//             body: JSON.stringify({ pipeline: pipeline2 }),
-//             headers: {
-//                 'Content-Type': 'application/json'
-//             }
-//         }).then(async (res) => {
-//             response2 = await res.json()
+    // populate end_trip selectbox
+    // postParams = {
+    //     "pipeline": [
+    //         {
+    //             "$group": {
+    //                 "_id": "$distrito_destino",
+    //                 "count": {
+    //                     "$sum": "$num_coincidencias"
+    //                 }
+    //             }
+    //         },
+    //         {
+    //             "$sort": {
+    //                 "_id": 1
+    //             }
+    //         }
+    //     ]
+    // }
 
+    // _res = await fetch(dataframe2Endpoint, {
+    //     method: 'post',
+    //     headers: {
+    //         "Content-type": "application/json"
+    //     },
+    //     body: JSON.stringify(postParams)
+    // })
+    // response = await _res.json();
 
-//             let x = [];
+    // const $selectEndTrip = $('#select_end_trip');
+    // $selectEndTrip.append($("<option />").val('All').text('Selecciona destino (Todos)'));
+    // response.map((item) => {
+    //     $selectEndTrip.append($("<option />").val(item._id).text(item._id));
+    // });
 
-//             response.map((item) => { x.push(item.num_paradas_10_min.$numberInt) })
-//             cero_paradas = parseInt(x[0]);
+}
 
-//             const arrSum = (arr) => arr.reduce((a, b) => parseInt(a) + parseInt(b), 0)
-//             var una_o_mas_paradas = arrSum(x) - cero_paradas;
-
-//             let y = [];
-//             response2.map((item) => { y.push(item.paradas_recoger_alguien.$numberInt) })
-//             paradas_recoger_alguien = y[1]
-
-
-//             var data = [{
-//                 values: [cero_paradas, una_o_mas_paradas - paradas_recoger_alguien, paradas_recoger_alguien],
-//                 labels: ['Cero paradas', 'Una o más paradas', 'Paradas para recoger a alguien'],
-//                 type: 'pie'
-//             }];
-
-//             Plotly.newPlot('plot7', data);
-
-//         })
-//             .catch(error => console.error('Error:', error))
-//     })
-//         .catch(error => console.error('Error:', error))
-// }
-// buildParadasRecogerAlguien();
-
-
-
-
-
-
-
+loadSelectBox();
