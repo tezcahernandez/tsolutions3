@@ -1,0 +1,19 @@
+/* remove default margin and padding from body */
+/* body {
+    padding: 0;
+    margin: 0;
+} */
+  
+  /* set map, body, and html to 100% of the screen size */
+#mainMap,
+.container-fluid{
+    height: 100%;
+}
+  
+.container-fluid{
+  padding: 0;
+}
+/* 
+#content .navbar.navbar-expand.navbar-light.bg-white.topbar.mb-4.static-top.shadow{
+
+} */
