@@ -131,29 +131,8 @@ createMap = async (start, end, transport) => {
     //     }).bindPopup(`${districts_coordinates[i].descrip}`).addTo(districtsLocationsLayer);
     // }
 
-    var baseMaps = {
-        "Dark": darkmap,
-        "Light": lightmap,
-        "Satellite": satellitemap
-    };
-
-    var overlayMaps = {
-        "Distritos": districtsLocationsLayer
-    };
-
-    var myMap = L.map("mainMap", {
-        center: [19.4326, -99.1332],
-        zoom: 11,
-        layers: [lightmap, districtsLocationsLayer]
-    });
-
-    L.control.layers(baseMaps, overlayMaps,
-        {
-            collapsed: false
-        }).addTo(myMap);
-
-
     // getting polylines
+    const polylinesLayer = new L.layerGroup();
     postParams = {
         "pipeline": [
             {
@@ -215,7 +194,8 @@ createMap = async (start, end, transport) => {
         polyline = L.polyline(
             coordinates,
             {
-                color: 'blue',
+                // color: 'blue',
+                color: '#00D700',
                 weight: 1,
                 opacity: resultsCount > 1000 ? .01 * count :
                     resultsCount > 500 ? .03 * count :
@@ -223,8 +203,33 @@ createMap = async (start, end, transport) => {
                             : .1,
                 lineJoin: 'round'
             }
-        ).addTo(myMap);
+        ).addTo(polylinesLayer);
     }
+
+    var baseMaps = {
+        "Dark": darkmap,
+        "Light": lightmap,
+        "Satellite": satellitemap
+    };
+
+    var overlayMaps = {
+        "Distritos": districtsLocationsLayer,
+        "Rutas": polylinesLayer
+    };
+
+    var myMap = L.map("mainMap", {
+        center: [19.4326, -99.1332],
+        zoom: 11,
+        layers: [darkmap, districtsLocationsLayer, polylinesLayer]
+    });
+
+    L.control.layers(baseMaps, overlayMaps,
+        {
+            collapsed: false
+        }).addTo(myMap);
+
+
+
 
     // top 15 roads
     postParams = {
@@ -339,7 +344,7 @@ createMap = async (start, end, transport) => {
         var div = L.DomUtil.create('div', 'info legend'),
             grades = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
             labels = [];
-
+        div.toggle
         div.innerHTML += 'Top 10 roads<br><hr>'
 
         for (var i = 0; i < grades.length; i++) {
@@ -355,17 +360,31 @@ createMap = async (start, end, transport) => {
 
 function getColor(v) {
 
-    return v > 8 ? '#0A2F51' :
-        v > 7 ? '#0E4D64' :
-            v > 6 ? '#137177' :
-                v > 5 ? '#188977' :
-                    v > 4 ? '#1D9A6C' :
-                        v > 3 ? '#48B16D' :
-                            v > 2 ? '#74C67A' :
-                                v > 1 ? '#ADDAA1' :
-                                    "#DEEDCF";
+    return v > 8 ? '#00D700' :
+        v > 7 ? '#08B934' :
+            v > 6 ? '#0E9C55' :
+                v > 5 ? '#138166' :
+                    v > 4 ? '#138166' :
+                        v > 3 ? '#156969' :
+                            v > 2 ? '#164352' :
+                                v > 1 ? '#164352' :
+                                    "#164352";
 
 }
+
+// function getColor(v) {
+
+//     return v > 8 ? '#0A2F51' :
+//         v > 7 ? '#0E4D64' :
+//             v > 6 ? '#137177' :
+//                 v > 5 ? '#188977' :
+//                     v > 4 ? '#1D9A6C' :
+//                         v > 3 ? '#48B16D' :
+//                             v > 2 ? '#74C67A' :
+//                                 v > 1 ? '#ADDAA1' :
+//                                     "#DEEDCF";
+
+// }
 
 createMap("All", "All", "All");
 
